@@ -31,12 +31,32 @@ def varyingSigma(mean, cov, numPoints, sigmaIndex, sigmaRange, title):
     plt.title(title)
     plt.show()
 
+
 if __name__ == "__main__":
-    mean = [2, 3]
+    mu = [2, 3]
     cov = [[1, 1.5], [1.5, 30]]
-    x, y = generateData(mean, cov, 100)
+    x, y = generateData(mu, cov, 100)
     plotData(x, y, "Randomly Generated Data")
     # Correlation between x & y
-    print("Correlation coefficient:",np.corrcoef(x, y)[0][1])
+    print("Correlation  coefficient:",np.corrcoef(x, y)[0][1])
     # Plot of correlations for varying sigma
-    varyingSigma(mean, cov, 100, [1, 1], [-50,50], "Vary Sigma for Y")
+    varyingSigma(mu, cov, 100, [1, 1], [0, 60], "Vary Sigma for Y")
+    # Correlation between new x and y
+    cov_diff = [[0.9, 0], [0, 0.9]]
+    x_new, y_new = generateData(mu, cov_diff, 100)
+    plotData(x_new, y_new, "Randomly Generated Data (diagonal correlation)")
+    # Apply decoorrelation transformation
+    assert(np.corrcoef(x_new, y_new)[0][1] == 0.9)
+    # Correlation over squared values
+    x **= 2
+    y **= 2
+    print("Correlation  coefficient for (X^2, Y^2):",np.corrcoef(x, y)[0][1])
+    # Generate new X,Y with different mu
+    mu_new = [-2, 3]
+    cov = [[1, 1.5], [1.5, 30]]
+    x_newer, y_newer = generateData(mu_new, cov, 100)
+    plotData(x_newer, y_newer, "Randomly Generated Data (new mu)")
+    x_newer **= 2
+    y_newer **= 2
+    print("Correlation  coefficient for new (X^2, Y^2):",\
+        np.corrcoef(x_newer, y_newer)[0][1])
