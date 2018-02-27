@@ -4,7 +4,7 @@ matplotlib.use('Agg')
 import argparse
 import numpy as np
 from sklearn import metrics
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve, auc, f1_score, precision_score, recall_score
 from sklearn.preprocessing import label_binarize
 from scipy import interp
 import matplotlib.pyplot as plt
@@ -77,10 +77,10 @@ def get_data(alldata):
     else:
         train_indices_3, train_indices_8 = np.where(Y_train==3)[0], np.where(Y_train==8)[0]
         test_indices_3, test_indices_8 = np.where(Y_test==3)[0], np.where(Y_test==8)[0]
-        train_indices_3 = np.random.permutation(train_indices_3)[:0.1 * len(train_indices_3)]
-        train_indices_8 = np.random.permutation(train_indices_8)[:0.9 * len(train_indices_8)]
-        test_indices_3 = np.random.permutation(test_indices_3)[:0.1 * len(test_indices_3)]
-        test_indices_8 = np.random.permutation(test_indices_8)[:0.9 * len(test_indices_8)]
+        train_indices_3 = np.random.permutation(train_indices_3)[:int(0.1 * len(train_indices_3))]
+        train_indices_8 = np.random.permutation(train_indices_8)[:int(0.9 * len(train_indices_8))]
+        test_indices_3 = np.random.permutation(test_indices_3)[:int(0.1 * len(test_indices_3))]
+        test_indices_8 = np.random.permutation(test_indices_8)[:int(0.9 * len(test_indices_8))]
         train_indices = np.concatenate((train_indices_3, train_indices_8), axis=0)
         test_indices = np.concatenate((test_indices_3, test_indices_8), axis=0)
         return (X_train[train_indices], Y_train[train_indices].tolist()), (X_test[test_indices], Y_test[test_indices].tolist())
@@ -105,7 +105,14 @@ if __name__ == "__main__":
     print("Test Accuracy:", getAccuracyFromCM(cm))
     # Plot ROC curve
     (Y_pred, Y_modified) = baCl.getModifiedPredictions(X_test, Y_test)
+    print("F1-Score:", f1_score(Y_modified, np.argmax(Y_pred,axis=1)))
+    print("Precision Score:", precision_score(Y_modified, np.argmax(Y_pred,axis=1)))
+    print("Recall Score:", recall_score(Y_modified, np.argmax(Y_pred,axis=1)))
     #Y_pred = label_binarize(Y_pred, classes=range(10))
-    Y_modified = label_binarize(Y_modified, classes=range(10))
+    if args.alldata == "yes":
+        Y_modified = label_binarize(Y_modified, classes=range(10))
+    else:
+         Y_modified = label_binarize(Y_modified, classes=range(2))
+         Y_pred = label_binarize(np.argmax(Y_pred, axis=1), classes=range(2))
     plotROC(Y_modified, Y_pred)
 

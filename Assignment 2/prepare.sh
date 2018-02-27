@@ -1,1 +1,4 @@
-wget https://www.dropbox.com/s/bnacjs9k3by0qs5/cudnn-8.0-linux-x64-v5.1.tgz?dl=1
+wget https://www.dropbox.com/s/6iobdamue96ukhy/Face_data.zip?dl=1
+mv Face_data.zip?dl=1 Face_data.zip
+unzip -d ./ Face_data.zip
+rm Face_data.zip
