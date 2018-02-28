@@ -115,12 +115,13 @@ def thirdQuestion(means, cov, priors=[0.5, 0.5]):
 	def getWhichOne(x):
 		values = [priors[i] * np.exp(-((x-means[i])**2)/(2 * cov[i])) / np.sqrt(cov[i]) for i in range(2)]
 		return np.argmax(values)
+
 	errorFunc = None
 	# Get points of intersections of discriminant functions
 	if not roots or (A==0 and C==0):
 		# Independent of input, get class for any input point
 		dominatingClass = getWhichOne(0)
-		print("Error:", priors[1-dominatingClass] / np.sqrt(2))
+		print("Error:", priors[1-dominatingClass])
 	elif A==0:
 		r = -C/B
 		before=1-getWhichOne(r-1)
@@ -174,11 +175,10 @@ def thirdQuestion(means, cov, priors=[0.5, 0.5]):
 def secondQuestion(data, points, priors=[0.33, 0.33, 0.33]):
 	distances = []
 	classifications = []
-	for i, perClassData in enumerate(data):
-		for datum in perClassData:
-			pointDistances = [np.sqrt(np.dot((datum - np.mean(data[j], axis=0)).T, np.dot(getInverse(np.cov(data[j].T)), datum-np.mean(data[j], axis=0)))) for j in range(len(data))]
-			classifications.append(np.argmin(pointDistances))
-			distances.append(pointDistances)
+	for datum in points:
+		pointDistances = [np.sqrt(np.dot((datum - np.mean(data[j], axis=0)).T, np.dot(getInverse(np.cov(data[j].T)), datum-np.mean(data[j], axis=0)))) for j in range(len(data))]
+		classifications.append(np.argmin(pointDistances))
+		distances.append(pointDistances)
 	return distances, classifications
 
 

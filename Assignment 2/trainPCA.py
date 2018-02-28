@@ -10,13 +10,12 @@ from PCA import PCA
 def readAllImages(directory, newShape):
 	X = []
 	Y = []
-	newShape = (64, 56)
 	for label in os.listdir(directory):
 		subDir = os.path.join(directory, label)
 		for imagePath in os.listdir(subDir):
 			try:
 				image = np.asarray(Image.open(os.path.join(subDir, imagePath)))
-				image = imresize(image, newShape).flatten()		
+				image = imresize(image, newShape).flatten() / 255.0
 				X.append(image)
 				Y.append(label)
 			except:
@@ -30,7 +29,7 @@ def readAllImages(directory, newShape):
 
 if __name__ == "__main__":
 	import sys
-	newShape = (64, 56)
+	newShape = (112, 98)
 	(X, Y) = readAllImages(sys.argv[1], newShape)
 	# Train classifier on original data
 	clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)

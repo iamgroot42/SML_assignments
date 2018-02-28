@@ -27,8 +27,8 @@ class PCA:
 		mean = np.mean(X, axis=0)
 		S = np.zeros((X.shape[1], X.shape[1]))
 		for i in tqdm(range(X.shape[0])):
-			modifiedX = X[i] - mean
-			S += np.dot(modifiedX, modifiedX.T)
+			modifiedX = (X[i] - mean).reshape((X.shape[1], 1))
+			S += np.dot(modifiedX, modifiedX.T) / X.shape[0]
 		eigenValues, eigenVectors = LA.eig(S)
 		eigenValues = np.real(eigenValues)
 		chosenIndices = self.eigenEnergy(eigenValues)

@@ -105,14 +105,14 @@ if __name__ == "__main__":
     print("Test Accuracy:", getAccuracyFromCM(cm))
     # Plot ROC curve
     (Y_pred, Y_modified) = baCl.getModifiedPredictions(X_test, Y_test)
-    print("F1-Score:", f1_score(Y_modified, np.argmax(Y_pred,axis=1)))
-    print("Precision Score:", precision_score(Y_modified, np.argmax(Y_pred,axis=1)))
-    print("Recall Score:", recall_score(Y_modified, np.argmax(Y_pred,axis=1)))
     #Y_pred = label_binarize(Y_pred, classes=range(10))
     if args.alldata == "yes":
         Y_modified = label_binarize(Y_modified, classes=range(10))
     else:
-         Y_modified = label_binarize(Y_modified, classes=range(2))
-         Y_pred = label_binarize(np.argmax(Y_pred, axis=1), classes=range(2))
+	print("F1-Score:", f1_score(Y_modified, np.argmax(Y_pred,axis=1)))
+        print("Precision Score:", precision_score(Y_modified, np.argmax(Y_pred,axis=1)))
+        print("Recall Score:", recall_score(Y_modified, np.argmax(Y_pred,axis=1)))
+        Y_modified = label_binarize(Y_modified, classes=range(2))
+        Y_pred = label_binarize(np.argmax(Y_pred, axis=1), classes=range(2))
     plotROC(Y_modified, Y_pred)
 
