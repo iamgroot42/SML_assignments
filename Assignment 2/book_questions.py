@@ -121,33 +121,29 @@ def thirdQuestion(means, cov, priors=[0.5, 0.5]):
 	if not roots or (A==0 and C==0):
 		# Independent of input, get class for any input point
 		dominatingClass = getWhichOne(0)
+		errorFunc = priors[1-dominatingClass]
 		print("Error:", priors[1-dominatingClass])
 	elif A==0:
 		r = -C/B
 		before=1-getWhichOne(r-1)
 		after=1-getWhichOne(r+1)
-		errorTerm = "erf(x-" + str(means[before]) + "/" + str(cov[before]) + ")"
-		errorTerm += " - erf(x-" + str(means[after]) + "/" + str(cov[after]) + ")"
-		errorTerm += " + 2erf(inf)"
+		errorTerm = "%f * erf((%f - %f) / %f) - %f * erf((%f - %f) / %f) + 0.25" % (priors[before]/2, r, means[before], 1.414 * cov[before], prios[after]/2, r, means[after], cov[after])
 		print("Error:", errorTerm)
-		errorFunc = lambda x: (erf((x-means[before])/cov[before]) + 2*erf(np.inf) - erf((x-means[after])/cov[after]))/np.sqrt(8*np.pi)
+		errorFunc =(priors[before] * erf((r-means[before])/(1.414*cov[before])) - priors[after] * erf((r-means[after])/(1.414*cov[after])) + 0.5)/2
 	else:
 		r1, r2 = np.min(roots), np.max(roots)
 		before = getWhichOne(r1-1)
 		middle = getWhichOne((r1+r2)/2)
 		after = getWhichOne(r2+1)
-		errorTerm = "erf(x-" + str(means[before]) + "/" + str(cov[before]) + ")"
-		errorTerm += " - erf(x-" + str(means[after]) + "/" + str(cov[after]) + ")"
-		errorTerm += " + erf(" + str((r2-means[middle])/cov[middle]) + ")"
-		errorTerm += " - erf(" + str((r1-means[middle])/cov[middle]) + ")"
+		errorTerm = "%f * erf((%f - %f)/%f) + %f" % (priors[before]/2, r1, means[before], cov[before], priors[before]/4)
+		errorTerm += " + %f * erf((%f - %f)/%f) - %f * erf((%f - %f)/%f)" % (priors[middle]/2, r2, means[middle], cov[middle], priors[middle]/2, r1, means[middle], cov[middle])
+		errorTerm += "+ %f + %f * erf((%f - %f)/%f)" % (priors[after]/4, priors[after]/2, r2, means[after], cov[after])
 		print("Error:", errorTerm)
-		errorFunc = lambda x: (erf((x-means[before])/cov[before]) - erf((x-means[after])/cov[after]) + erf((r2-means[middle])/cov[middle]) - erf((r1-means[middle])/cov[middle]))/np.sqrt(8*np.pi)
+		errorFunc = (erf((r1-means[before])/(1.414*cov[before])) + 0.5) * priors[before]/2
+		errorFunc += (erf((r2-means[middle])/(1.414*cov[middle])) - erf((r1-means[middle])/(1.414*cov[middle])) ) * priors[middle] / 2
+		errorFunc += (0.5 - erf((r2-means[after])/(1.414*cov[after]))) * priors[after] / 2
 	
-	# Use numerical methods to estimate integral (if not constant)	
-	if errorFunc:
-		res, _ = quad(errorFunc, -1e10, 1e10)
-		res /= 2e10
-		print ("Error found using numerical integration:", res)
+	print ("Error found using numerical integration:", errorFunc)
 
 	def getPrediction(x):
 		pros = [ priors[i] * np.exp((-(x-means[i])**2)/cov[i]) / np.sqrt(cov[i]) for i in range(2)]
