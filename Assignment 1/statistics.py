@@ -1,4 +1,8 @@
 import numpy as np
+
+import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 
 # Fix seed for reproducability
@@ -9,15 +13,18 @@ def generateData(mean, cov, numPoints):
     return data[:,0], data[:,1]
 
 def plotData(x, y, title):
+    plt.clf()
     plt.scatter(x, y, c="r", alpha=0.5, marker='+', label="Data Point")
     plt.xlabel("X")
     plt.ylabel("Y")
     plt.legend(loc=2)
     plt.title(title)
-    plt.show()
+    plt.savefig("temp" + title)
+    #plt.show()
 
 def varyingSigma(mean, cov, numPoints, sigmaIndex, sigmaRange, title):
     correlations = []
+    plt.clf()
     for i in range(sigmaRange[0], sigmaRange[1]):
         newCov = np.copy(cov)
         newCov[sigmaIndex[0]][sigmaIndex[1]] = i
@@ -29,7 +36,8 @@ def varyingSigma(mean, cov, numPoints, sigmaIndex, sigmaRange, title):
     plt.ylabel("Correlation Coefficient")
     plt.legend(loc=2)
     plt.title(title)
-    plt.show()
+    plt.savefig("temp2" + title)
+    #plt.show()
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ def readAllImages(directory, newShape):
 		for imagePath in os.listdir(subDir):
 			try:
 				image = np.asarray(Image.open(os.path.join(subDir, imagePath)))
-				image = imresize(image, newShape).flatten() / 255.0
+				image = imresize(image, newShape).flatten()
 				X.append(image)
 				Y.append(label)
 			except:

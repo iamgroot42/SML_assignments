@@ -40,6 +40,7 @@ class PCA:
 
 	def dumpEigenVectors(self, dir):
 		for i, eigenvector in enumerate(self.W):
-			image = eigenvector.reshape(self.imageShape)
+			image = (eigenvector.reshape(self.imageShape))
+			print image
 			scipy.misc.imsave(os.path.join(dir, str(i) + '.png'), image)
 
