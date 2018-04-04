@@ -1,21 +1,35 @@
-from keras.datasets import mnist
+import tensorflow as tf
+import keras
+from keras.datasets import cifar10
 from keras.utils import np_utils
 import numpy as np
-from Layer import Layer
-from Activation import Sigmoid, SoftMax, ReLU
-from Model import Model
-from Error import Error
+
+from keras.models import Sequential
+from keras.layers import Dense, Activation, Flatten
+from keras.optimizers import Adadelta, SGD
+
+config = tf.ConfigProto()
+config.gpu_options.allow_growth=True
+sess = tf.Session(config=config)
+keras.backend.set_session(sess)
+
 
 def process_data():
-	(X_train, y_train), (X_test, y_test) = mnist.load_data()
-	X_train = X_train.reshape(60000, 784)
-	y_train = y_train.reshape(60000, 1)
-	X_test = X_test.reshape(10000, 784)
-	y_test = y_test.reshape(10000, 1)
+	(X_train, y_train), (X_test, y_test) = cifar10.load_data()
+	# Pick only one channel
+	X_train = X_train[:,:,:,0]
+	X_test = X_test[:,:,:,0]
+	# Flatten data
+	X_train = X_train.reshape(X_train.shape[0], 1024)
+	y_train = y_train.reshape(y_train.shape[0], 1)
+	X_test = X_test.reshape(X_test.shape[0], 1024)
+	y_test = y_test.reshape(y_test.shape[0], 1)
+	# Scale down to [0,1]
 	X_train = X_train.astype('float32')
 	X_test = X_test.astype('float32')
 	X_train /= 255
 	X_test /= 255
+	# Convert to 1-hot
 	y_train = np_utils.to_categorical(y_train)
 	y_test = np_utils.to_categorical(y_test)
 	X_train = np.matrix(X_train)
@@ -25,32 +39,37 @@ def process_data():
 	return (X_train, y_train), (X_test, y_test)
 
 
-def single_layer(X_train, X_test, y_train, y_test, verbose=False):
-	m = Model(Error())
-	m.add_layer(Layer((784,10), SoftMax(), dropout=0.2))
-	t_acc = (1-m.train(X_train, y_train, verbose)) * 100
-	print "Train accuracy", t_acc, "%"
-	print "Test accuracy", (1-m.test(X_test, y_test)) * 100, "%"
-
-
-def getModel(i, h, o, e=None):
-	m = Model(Error())
-	m.add_layer(Layer((i, h), Sigmoid(), dropout=None))
-	if e:
-		m.add_layer(Layer((h, e), Sigmoid(), dropout=None))
-		m.add_layer(Layer((e, o), SoftMax(), dropout=None))
-	else:
-		m.add_layer(Layer((h, o), SoftMax(), dropout=None))
+def getModel(learning_rate=1):
+	model = Sequential()
+	model.add(Dense(50, input_shape=(1024,)))
+	model.add(Activation('relu'))
+	model.add(Dense(10))
+	model.add(Activation('softmax'))
+	model.compile(loss=keras.losses.categorical_crossentropy,
+		optimizer=Adadelta(lr=learning_rate),
+		metrics=['accuracy'])
 	return model
 
 
-t_acc = (1-m.train(X_train, y_train, verbose)) * 100
-print "(", dropout_param, ",", batch_size, ",", learning_rate, ",", momentum_rate, ")"
-print "Train accuracy", t_acc, "%"
-print "Test accuracy", (1-m.test(X_test, y_test, 0.3)) * 100, "%"
-print "-------------"
+def bagging(X_train, Y_train, X_test, Y_test, n, part=0.8):
+	models = [getModel() for _ in range(n)]
+	for i in range(n):
+		p = np.random.permutation(len(X_train))[:int(part * len(X_train))]
+		Xt, Yt = X_train[p], Y_train[p]
+		models[i].fit(Xt, Yt, epochs=20)
+	predictions = []
+	for i in range(n):
+		predictions.append(models[i].predict(X_test))
+	predictions = np.stack(predictions)
+	predictions = np.sum(predictions, axis=0) / n
+	correct = 0
+	for i in range(len(Y_test)):
+		if np.argmax(Y_test[i]) == np.argmax(predictions[i]):
+			correct += 1
+	acc = float(correct) / len(Y_test)
+	return acc
 
 
 if __name__ == "__main__":
 	(X_train, y_train), (X_test, y_test) = process_data()
-	multi_layer(X_train, X_test, y_train, y_test, False)
+	print(bagging(X_train, y_train, X_test, y_test, 15))

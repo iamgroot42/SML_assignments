@@ -1,0 +1,4 @@
+*.pyc
+emnist/*
+__pycache__
+*.zip

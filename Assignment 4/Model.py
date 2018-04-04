@@ -15,10 +15,8 @@ class Model():
 		self.layers.append(layer)
 
 	def forward_pass(self):
-		self.layers[0].gen_dropout()
 		self.layers[0].forward(self.X)
 		for i in range(1,len(self.layers)):
-			self.layers[i].gen_dropout()
 			self.layers[i].forward(self.layers[i-1].output)
 		self.Y_cap = self.layers[-1].activation.func(self.layers[-1].output)
 
@@ -26,24 +24,25 @@ class Model():
 		self.layers[-1].gradient  = self.error.gradient(self.Y, self.Y_cap).T
 		for i in range(len(self.layers)-2,-1,-1):
 			activation_gradient = self.layers[i].activation.gradient(self.layers[i].output).T
-			second_term = np.multiply(self.layers[i+1].weights, self.layers[i+1].dropout_mask) * self.layers[i+1].gradient
+			second_term = np.dot(self.layers[i+1].weights, self.layers[i+1].gradient)
 			self.layers[i].gradient = np.multiply(activation_gradient, second_term)
 
 	def update_weights(self):
 		gradient = self.layers[0].gradient * self.X
 		self.layers[0].momentum *= self.gamma
 		self.layers[0].momentum += self.learning_rate * (gradient.T)
-		self.layers[0].weights -= np.multiply(self.layers[0].momentum, self.layers[0].dropout_mask)
+		self.layers[0].weights -= self.layers[0].momentum
 		for i in range(1,len(self.layers)):
 			gradient = self.layers[i].gradient * self.layers[i-1].activation.func(self.layers[i-1].output)
 			self.layers[i].momentum *= self.gamma
 			self.layers[i].momentum += self.learning_rate * (gradient.T)
-			self.layers[i].weights -= np.multiply(self.layers[i].momentum, self.layers[i].dropout_mask)
+			self.layers[i].weights -= self.layers[i].momentum
 
-	def one_iter(self):
+	def one_iter(self, test=False):
 		self.forward_pass()
-		self.backward_pass()
-		self.update_weights()
+		if not test:
+			self.backward_pass()
+			self.update_weights()
 		return self.error.pred_error(self.Y, self.Y_cap)
 
 	def train(self, X_train, Y_train, verbose=False):
@@ -58,7 +57,7 @@ class Model():
 			for _ in range(self.max_iters):
 				batch_pass_error = 0.0
 				for j in range(self.batch_size):
-					self.X = X_batch[j]
+					self.X = X_batch[j:j+1]
 					self.Y = Y_batch[j]
 					error = self.one_iter()
 					batch_pass_error += error
@@ -75,16 +74,22 @@ class Model():
 				print "Accuracy for this batch", (1-total_error) * 100, "%"
 		return training_accuracy / float(num_batches)
 
-	def test(self, X_test, y_test, dropout=False):
-		if dropout:
-			for layer in self.layers:
-				layer.dropout = dropout
-				layer.gen_dropout()
+	def test(self, X_test, y_test):
 		total_acc = 0.0
 		for i in range(len(X_test)):
 			self.X = X_test[i]
 			self.Y = y_test[i]
-			total_acc += self.one_iter()
+			total_acc += self.one_iter(True)
 		total_acc /= float(len(X_test))
 		return total_acc
 
+	def predict(self, X_test):
+		predictions = []
+		for i in range(len(X_test)):
+			self.X = X_test[i]
+			self.layers[0].forward(self.X)
+	                for i in range(1,len(self.layers)):
+        	                self.layers[i].forward(self.layers[i-1].output)
+                	self.Y_cap = self.layers[-1].activation.func(self.layers[-1].output)			
+			predictions.append(self.Y_cap)
+		return np.stack(predictions)
