@@ -2,3 +2,7 @@
 emnist/*
 __pycache__
 *.zip
+*.png
+sml/*
+*.data
+*.test

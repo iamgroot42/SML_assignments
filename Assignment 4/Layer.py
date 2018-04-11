@@ -8,7 +8,7 @@ class Layer():
 		if zeros:
 			self.weights = np.zeros((weight_shape[0], weight_shape[1]))
 		else:
-			self.weights = np.random.rand(weight_shape[0], weight_shape[1]) / 100
+			self.weights = np.random.rand(weight_shape[0], weight_shape[1]) / 1000
 		self.output = np.zeros(weight_shape)
 		self.gradient = None
 		self.momentum = 0.0

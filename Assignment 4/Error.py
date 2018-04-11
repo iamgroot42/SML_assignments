@@ -8,4 +8,4 @@ class Error():
 		return -(Y - Y_cap)
 
 	def pred_error(self, Y, Y_cap):
-		return 1 * (np.argmax(Y_cap) != np.argmax(Y))
+		return 1 * (np.argmax(Y_cap[0]) != np.argmax(Y))

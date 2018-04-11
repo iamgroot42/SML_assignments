@@ -27,5 +27,5 @@ class ReLU():
 
 class SoftMax():
 	def func(self, X):
-		norm_X = X - X.mean()
-		return np.exp(X) / np.sum(np.exp(X))
+		e_x = np.exp(X - np.max(X))
+		return e_x / e_x.sum()

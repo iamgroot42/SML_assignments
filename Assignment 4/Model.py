@@ -1,5 +1,6 @@
 import numpy as np
 from Layer import Layer
+from tqdm import tqdm
 
 
 class Model():
@@ -28,11 +29,12 @@ class Model():
 			self.layers[i].gradient = np.multiply(activation_gradient, second_term)
 
 	def update_weights(self):
+		#print "weights", [p.weights for p in self.layers]
 		gradient = self.layers[0].gradient * self.X
 		self.layers[0].momentum *= self.gamma
 		self.layers[0].momentum += self.learning_rate * (gradient.T)
 		self.layers[0].weights -= self.layers[0].momentum
-		for i in range(1,len(self.layers)):
+		for i in range(1, len(self.layers)):
 			gradient = self.layers[i].gradient * self.layers[i-1].activation.func(self.layers[i-1].output)
 			self.layers[i].momentum *= self.gamma
 			self.layers[i].momentum += self.learning_rate * (gradient.T)
@@ -48,7 +50,7 @@ class Model():
 	def train(self, X_train, Y_train, verbose=False):
 		training_accuracy = 0.0
 		num_batches = 0
-		for i in range(0,len(X_train)-self.batch_size,self.batch_size):
+		for i in tqdm(range(0, len(X_train)-self.batch_size, self.batch_size)):
 			total_error = 0.0
 			X_batch = X_train[i: i+self.batch_size]
 			Y_batch = Y_train[i: i+self.batch_size]
@@ -63,10 +65,8 @@ class Model():
 					batch_pass_error += error
 				batch_pass_error /= float(self.batch_size)
 				num_iters += 1
-				if prev_error - batch_pass_error <= 0.001:
-					break
 				prev_error = batch_pass_error
-			total_error += batch_pass_error
+				total_error += batch_pass_error
 			total_error /= float(num_iters)
 			training_accuracy += total_error
 			num_batches += 1
@@ -76,20 +76,22 @@ class Model():
 
 	def test(self, X_test, y_test):
 		total_acc = 0.0
+		predictions = []
 		for i in range(len(X_test)):
-			self.X = X_test[i]
+			self.X = X_test[i:i+1]
 			self.Y = y_test[i]
 			total_acc += self.one_iter(True)
+			predictions.append(self.Y_cap[0])
 		total_acc /= float(len(X_test))
-		return total_acc
+		return total_acc, np.stack(predictions)
 
 	def predict(self, X_test):
 		predictions = []
 		for i in range(len(X_test)):
-			self.X = X_test[i]
+			self.X = X_test[i:i+1]
 			self.layers[0].forward(self.X)
-	                for i in range(1,len(self.layers)):
-        	                self.layers[i].forward(self.layers[i-1].output)
-                	self.Y_cap = self.layers[-1].activation.func(self.layers[-1].output)			
-			predictions.append(self.Y_cap)
+	                for j in range(1,len(self.layers)):
+        	                self.layers[j].forward(self.layers[j-1].output)
+                	self.Y_cap = self.layers[-1].activation.func(self.layers[-1].output)
+			predictions.append(self.Y_cap[0])
 		return np.stack(predictions)
