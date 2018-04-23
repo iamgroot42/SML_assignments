@@ -3,6 +3,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.neighbors import kneighbors_graph
 
 
 def getDistrA():
@@ -46,7 +47,7 @@ def getDistrB():
 
 	n = 1600
 	center = [3 ,4]
-	radius = 1.5
+	radius = 2
 	angle = 2 * np.pi * np.random.randn(n, 1)
 	r = radius * np.sqrt(np.random.rand(n,1))
 	X1 = r * np.cos(angle)+ center[0]
@@ -60,7 +61,9 @@ def getDistrB():
 if __name__ == "__main__":
 	points = getDistrA()
 	#labels = KMeans(n_clusters=2, random_state=0).fit_predict(points)
-	labels = AgglomerativeClustering(n_clusters=2,linkage="average").fit_predict(points)
+	connectivity = kneighbors_graph(points, n_neighbors=10, include_self=False)
+	connectivity = 0.5 * (connectivity + connectivity.T)
+	labels = AgglomerativeClustering(n_clusters=2,linkage="complete", connectivity=connectivity).fit_predict(points)
 	plt.plot(points[np.where(labels==0)[0]][:,0], points[np.where(labels==0)[0]][:,1], 'r.')
 	plt.plot(points[np.where(labels==1)[0]][:,0], points[np.where(labels==1)[0]][:,1], 'b.')
 	#plt.savefig('Kmeans.png')
